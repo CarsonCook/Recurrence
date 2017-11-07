@@ -9,7 +9,7 @@ using namespace std;
 typedef vector<vector<int>> planeVec;
 
 const int NUM_PPL = 300;
-const int THRESH = 50;
+const int THRESH = 5;
 
 planeVec readListsFile();
 
@@ -31,7 +31,7 @@ int main() {
 
 void searchPairsAlgo(planeVec planes) {
     //data structures to count pairs
-    int togetherCount[NUM_PPL][NUM_PPL];
+    int togetherCount[NUM_PPL][NUM_PPL] = {0};
     unordered_map<string, int> pairsAboveThresh;
 
     //loop through every person in every plane
@@ -44,14 +44,12 @@ void searchPairsAlgo(planeVec planes) {
                 if (togetherCount[p1][p2] > THRESH) {
                     //make string key - unique person numbers so first concat comma concat second is unique key
                     string key = to_string(p1) + ',' + to_string(p2);
-                    if (i == 0)
-                        cout << "KEY: " << key << endl;
                     //see if pair already above threshold
                     if (pairsAboveThresh.find(key) != pairsAboveThresh.end()) {
                         ++(pairsAboveThresh.find(key)->second); //increase counter
                     } else {
                         //insert new pair with the current count
-                        pair<string, int> planePair(key, togetherCount[i][j]);
+                        pair<string, int> planePair(key, togetherCount[p1][p2]);
                         pairsAboveThresh.insert(planePair);
                     }
                 }
