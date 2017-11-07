@@ -1,0 +1,3 @@
+C:/Users/cookc/Desktop/Queens/Fall-2017/CMPE365/Recurrence/project/cmake-build-debug/CMakeFiles/project.dir
+C:/Users/cookc/Desktop/Queens/Fall-2017/CMPE365/Recurrence/project/cmake-build-debug/CMakeFiles/edit_cache.dir
+C:/Users/cookc/Desktop/Queens/Fall-2017/CMPE365/Recurrence/project/cmake-build-debug/CMakeFiles/rebuild_cache.dir
