@@ -9,4 +9,12 @@
 C:/Users/cookc/Desktop/Queens/Fall-2017/CMPE365/Recurrence/project/main.cpp
 iostream
 -
+chrono
+-
+vector
+-
+fstream
+-
+unordered_map
+-
 
