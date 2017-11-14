@@ -9,14 +9,13 @@ using namespace std;
 typedef vector<vector<int>> planeVec;
 
 const int NUM_PPL = 300; //full data set = 300
-const int THRESH = 20;
+const int THRESH = 25;
 const int NUM_PLANES = 100; //full data set = 100
+const char *FILE_NAME = "newlists.csv";
 
 planeVec readListsFile();
 
-void searchPairsAlgo(const planeVec &planes);
-
-void markPairsAlgo(const planeVec &planes);
+void searchPairs(const planeVec &planes);
 
 int main() {
     //setup, needed in all algorithms, don't include in time analysis
@@ -29,110 +28,20 @@ int main() {
 
     start = chrono::duration_cast<chrono::milliseconds>(
             chrono::system_clock::now().time_since_epoch());
-    searchPairsAlgo(planes);
+    searchPairs(planes);
     end = chrono::duration_cast<chrono::milliseconds>(
             chrono::system_clock::now().time_since_epoch());
-    cout << "Time to execute search pairs algo: " << (end.count() - start.count()) << " milliseconds" << endl;
+    cout << "Time to execute algorithm: " << (end.count() - start.count()) << " milliseconds" << endl;
 
-    start = chrono::duration_cast<chrono::milliseconds>(
-            chrono::system_clock::now().time_since_epoch());
-    markPairsAlgo(planes);
-    end = chrono::duration_cast<chrono::milliseconds>(
-            chrono::system_clock::now().time_since_epoch());
-    cout << "Time to execute mark pairs algo: " << (end.count() - start.count()) << " milliseconds" << endl;
+    //test with to_string twice with 9 digits and +',' was 0 ms - negligible time for most problem size
+    //same for iterating through and setting 300x300 matrix to 0 - plus compiler optimizes {0}
+    //[] - https://stackoverflow.com/questions/6897737/using-the-operator-efficiently-with-c-unordered-map
     return 0;
 }
 
-void markPairsAlgo(const planeVec &planes) {
-    unordered_map<string, int> pairs;
-
-    //loop through every person in every plane
-    for (const auto &plane : planes) {
-        int presentMark[NUM_PPL][NUM_PPL] = {0}; //increment wherever a person is present, if get 2 - both present
-        //initialized here so each plane has fresh 0s
-        for (auto person : plane) {
-            //mark person present for this plane
-            for (int i = 0; i < NUM_PPL; ++i) {
-                if (i == person - 1) {
-                    continue; //don't want case in marking table where person on row and column are the same
-                }
-                ++presentMark[i][person - 1];
-                ++presentMark[person - 1][i];
-                //if both present, insert into pairs and start counter
-                //or increment counter if already present
-                if (presentMark[i][person - 1] >= 2 || presentMark[person - 1][i] >= 2) {
-                    string key = to_string(i + 1) + ',' + to_string(person);
-                    auto search = pairs.find(key);
-                    if (search != pairs.end()) {
-                        ++(search->second); //increase counter
-                    } else {
-                        pair<string, int> planePair(key, 1);
-                        pairs.insert(planePair);
-                    }
-                }
-            }
-        }
-    }
-    //go through found pairs and print those above the threshold
-    int count = 0;
-    for (const auto &pair : pairs) {
-        if (pair.second >= THRESH) {
-            ++count;
-            //separate based on comma
-            string p1 = pair.first.substr(0, pair.first.find(','));
-            string p2 = pair.first.substr(pair.first.find(',') + 1);
-            //when getting the time, ignore actually outputting result as that is slow and
-            //is needed for every algorithm. Also doesn't really relate to how efficient algo is.
-            // cout << "Person 1: " << p1 << " Person 2: " << p2 << " Count: " << pair.second << endl;
-        }
-    }
-    cout << count << endl; //used to see how many pairs above thesh and ensure both algos get same answer
-}
-
-void searchPairsAlgo(const planeVec &planes) {
-    //data structures to count pairs
-    int togetherCount[NUM_PPL][NUM_PPL] = {0};
-    unordered_map<string, int> pairsAboveThresh;
-
-    //loop through every person in every plane
-    for (const auto &plane : planes) {
-        for (int i = 0; i < plane.size() - 1; ++i) {
-            for (int j = i + 1; j < plane.size(); ++j) {
-                int p1 = plane[i];
-                int p2 = plane[j];
-                ++togetherCount[p1 - 1][p2 - 1];
-                if (togetherCount[p1 - 1][p2 - 1] >= THRESH) {
-                    //make string key - unique person numbers so first concat comma concat second is unique key
-                    string key = to_string(p1) + ',' + to_string(p2);
-                    //see if pair already above threshold
-                    auto search = pairsAboveThresh.find(key);
-                    if (search != pairsAboveThresh.end()) {
-                        ++(search->second); //increase counter
-                    } else {
-                        //insert new pair with the current count
-                        pair<string, int> planePair(key, togetherCount[p1 - 1][p2 - 1]);
-                        pairsAboveThresh.insert(planePair);
-                    }
-                }
-            }
-        }
-    }
-    //go through pairs above the threshold and print them
-
-    for (const auto &pair : pairsAboveThresh) {
-        //separate based on comma
-        string p1 = pair.first.substr(0, pair.first.find(','));
-        string p2 = pair.first.substr(pair.first.find(',') + 1);
-        //when getting the time, ignore actually outputting result as that is slow and
-        //is needed for every algorithm. Also doesn't really relate to how efficient algo is.
-        //  cout << "Person 1: " << p1 << " Person 2: " << p2 << " Count: " << pair.second << endl;
-    }
-    //used to see number of pairs above thresh, ensure two algos get same answer
-    cout << pairsAboveThresh.size() << endl;
-}
-
 planeVec readListsFile() {
-    ifstream inFile("../lists.csv");
+    std::string filePath = "../";
+    ifstream inFile(filePath + FILE_NAME);
     if (inFile.fail()) {
         cerr << "could not open lists.csv" << endl;
         exit(1); //abort program
@@ -142,10 +51,11 @@ planeVec readListsFile() {
     string line;
     int count = 0; //used for testing different data sets, less than all planes
     while (getline(inFile, line) && count < NUM_PLANES) {
+        line += '\n';
         vector<int> onePlane;
         string oneNum;
-        for (auto c : line) {
-            if (c != ',') {
+        for (const auto &c : line) {
+            if (c != ',' && c != '\n') {
                 oneNum += c;
             } else {
                 onePlane.push_back(stoi(oneNum));
@@ -158,4 +68,32 @@ planeVec readListsFile() {
 
     inFile.close();
     return planes;
+}
+
+void searchPairs(const planeVec &planes) {
+    int togetherCount[NUM_PPL][NUM_PPL] = {0};
+    unordered_map<string, int> pairsAboveThresh;
+    for (const auto &plane : planes) {
+        for (int i = 0; i < plane.size(); ++i) {
+            int p1 = plane[i]; //first person number in plane
+            for (int j = i + 1; j < plane.size(); ++j) {
+                int p2 = plane[j]; //second person number to pair with the first
+                ++togetherCount[p1 - 1][p2 - 1]; //- 1 because the array is 0 to 299, people numbers are 1 to 300
+                //if at threshold, insert into pairs hash table
+                //only insert when at threshold - won't have total pair count, but saves computation time
+                //if want total count, set == to >= and set paris = THRESH to togetherCount[p1-1][p2-1]
+                //This improves speed if you don't care about the number of co-occurences, only if it is >= THRESH
+                if (togetherCount[p1 - 1][p2 - 1] == THRESH) {
+                    string key = to_string(p1) + ',' + to_string(p2);
+                    pairsAboveThresh[key] = THRESH;
+                }
+            }
+        }
+    }
+    /* Removed outputting the pairs for speed test purposes - algorithm doesn't need to print pairs
+    for (const auto &pair : pairsAboveThresh) {
+        cout << pair.first << " ";
+    }
+     */
+    cout << pairsAboveThresh.size() << endl;
 }
