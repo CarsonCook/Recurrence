@@ -11,7 +11,7 @@ typedef vector<vector<int>> planeVec;
 const int NUM_PPL = 300; //full data set = 300
 const int THRESH = 25;
 const int NUM_PLANES = 100; //full data set = 100
-const char *FILE_NAME = "newlists.csv";
+const char *FILE_NAME = "newlists.csv"; //char* so that no chance of exception for global (static) assignment
 
 planeVec readListsFile();
 
@@ -43,7 +43,7 @@ planeVec readListsFile() {
     std::string filePath = "../";
     ifstream inFile(filePath + FILE_NAME);
     if (inFile.fail()) {
-        cerr << "could not open lists.csv" << endl;
+        cerr << "Could not open " << filePath << FILE_NAME << endl;
         exit(1); //abort program
     }
 
