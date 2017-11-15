@@ -7,15 +7,22 @@
 using namespace std;
 
 typedef vector<vector<int>> planeVec;
+typedef unordered_map<string, int> pairMap;
 
 const int NUM_PPL = 300; //full data set = 300
-const int THRESH = 25;
+const int THRESH = 50; //counts greater than OR EQUAL will be considered interesting
 const int NUM_PLANES = 100; //full data set = 100
-const char *FILE_NAME = "newlists.csv"; //char* so that no chance of exception for global (static) assignment
+const char FILE_NAME[20] = "newlists.csv"; //char[] so that no chance of exception for global (static) assignment
+
+
 
 planeVec readListsFile();
 
-void searchPairs(const planeVec &planes);
+/*
+ * Algorithm that will scan through each plane looking for a pair. Table keeps track of all plane pairs in the entire data set.
+ * When pair count reaches the threshold, that pair is inserted into a hash table.
+ */
+pairMap searchPairs(const planeVec &planes);
 
 int main() {
     //setup, needed in all algorithms, don't include in time analysis
@@ -28,14 +35,26 @@ int main() {
 
     start = chrono::duration_cast<chrono::milliseconds>(
             chrono::system_clock::now().time_since_epoch());
-    searchPairs(planes);
+    pairMap pairs = searchPairs(planes);
     end = chrono::duration_cast<chrono::milliseconds>(
             chrono::system_clock::now().time_since_epoch());
     cout << "Time to execute algorithm: " << (end.count() - start.count()) << " milliseconds" << endl;
 
-    //test with to_string twice with 9 digits and +',' was 0 ms - negligible time for most problem size
-    //same for iterating through and setting 300x300 matrix to 0 - plus compiler optimizes {0}
-    //[] - https://stackoverflow.com/questions/6897737/using-the-operator-efficiently-with-c-unordered-map
+    /*
+    //export pairs to a csv for plotting
+    const string outFileName = "newlistsThresh50_Out.csv";
+    ofstream outFile("../" + outFileName);
+    if (outFile.fail()) {
+        cerr << "Could not open ../" << outFileName << endl;
+        exit(1);
+    }
+    for (const auto &pair : pairs) {
+        string p1 = pair.first.substr(0, pair.first.find(','));
+        string p2 = pair.first.substr(pair.first.find(',') + 1);
+        outFile << p1 << ',' << p2 << endl;
+    }
+    outFile.close();
+     */
     return 0;
 }
 
@@ -70,19 +89,22 @@ planeVec readListsFile() {
     return planes;
 }
 
-void searchPairs(const planeVec &planes) {
-    int togetherCount[NUM_PPL][NUM_PPL] = {0};
-    unordered_map<string, int> pairsAboveThresh;
+pairMap searchPairs(const planeVec &planes) {
+    static int togetherCount[NUM_PPL][NUM_PPL]; //or not static, use  = {0}; to set to 0, but that is slower
+    pairMap pairsAboveThresh;
     for (const auto &plane : planes) {
-        for (int i = 0; i < plane.size(); ++i) {
+        //i < plane.size()-1 so that j = i+1 won't get to plane.size()
+        int planeSize = plane.size(); //avoid calling plane.size() in each of two following loops
+        for (int i = 0; i < planeSize - 1; ++i) {
             int p1 = plane[i]; //first person number in plane
-            for (int j = i + 1; j < plane.size(); ++j) {
+            for (int j = i + 1; j < planeSize; ++j) {
                 int p2 = plane[j]; //second person number to pair with the first
-                ++togetherCount[p1 - 1][p2 - 1]; //- 1 because the array is 0 to 299, people numbers are 1 to 300
+                ++togetherCount[p1 - 1][p2 - 1]; //- 1 because the array is 0 to 299 but people numbers are 1 to 300
                 //if at threshold, insert into pairs hash table
                 //only insert when at threshold - won't have total pair count, but saves computation time
                 //if want total count, set == to >= and set paris = THRESH to togetherCount[p1-1][p2-1]
-                //This improves speed if you don't care about the number of co-occurences, only if it is >= THRESH
+                //This improves speed if you don't care about the number of co-occurrences, only if it is >= THRESH
+                //don't check if already in map - if are in map requires 2 accesses instead of 1
                 if (togetherCount[p1 - 1][p2 - 1] == THRESH) {
                     string key = to_string(p1) + ',' + to_string(p2);
                     pairsAboveThresh[key] = THRESH;
@@ -94,6 +116,7 @@ void searchPairs(const planeVec &planes) {
     for (const auto &pair : pairsAboveThresh) {
         cout << pair.first << " ";
     }
-     */
-    cout << pairsAboveThresh.size() << endl;
+    cout << "Number of interesting pairs: " << pairsAboveThresh.size() << endl;
+    */
+    return pairsAboveThresh;
 }
