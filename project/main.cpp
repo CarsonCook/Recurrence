@@ -10,9 +10,9 @@ typedef vector<vector<int>> planeVec;
 typedef unordered_map<string, int> pairMap;
 
 const int NUM_PPL = 300; //full data set = 300
-const int THRESH = 50; //counts greater than OR EQUAL will be considered interesting
+const int THRESH = 25; //counts greater than OR EQUAL will be considered interesting
 const int NUM_PLANES = 100; //full data set = 100
-const char FILE_NAME[20] = "newlists.csv"; //char[] so that no chance of exception for global (static) assignment
+const char FILE_NAME[20] = "lists.csv"; //char[] so that no chance of exception for global (static) assignment
 
 
 
